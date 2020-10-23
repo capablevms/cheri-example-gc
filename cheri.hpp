@@ -6,8 +6,7 @@
 #include "gc.hpp"
 #include <cheri/cheric.h>
 
-#include "../examples/include/common.h"
-// On the stack inked list compression with cheri intrinsics.
+// On the stack inked list compression with CHERI intrinsics.
 struct CheriCompressedListStyle
 {
   static inline const uint32_t end = 0;
@@ -40,19 +39,23 @@ struct CheriStackIterator
   void **location;
 
   // Check if the pointer is executable. 
-  // Done by using the permition bits.
+  // Done by using the permission bits.
+  // In practice this checks if the pointer has specific permissions 
+  // as this directly differentiates pointers on the heap and ones on the stack.
   bool is_exec(void *ptr)
   {
     TRACE("%p %d\n", ptr, (cheri_getperm(ptr) != 0x6817d));
-    //inspect_pointer(*location);
     return ((cheri_getperm(ptr) != 0x6817d) );
 
   }
   
-  // Skip all the things that arn't pointers.
-  // Also skip all the pointers we don't care about.  
+  // find the next valid GC pointer by iterating the stack and checking 
+  // the meta information for each 16 bytes.  
   void find_next() {
     TRACE("%lu\n", cheri_getaddress(bottom) - cheri_getaddress(location));
+    // If the value doesn't have a tag it can be ignored
+    // If the value doesn't have a flag it can be ignored
+    // If the value doesn't have the correct permission it can be ignored.
     while(!cheri_gettag(*location) or !cheri_getflags(*location) or is_exec(*location))  
     {
       if(location >= bottom) {
@@ -66,7 +69,7 @@ struct CheriStackIterator
     TRACE("Found pointer: %p\n", *location);
   }
 
-  
+  // The iteration starts from the current stack pointer. 
   CheriStackIterator(void *start)
   {
     location = reinterpret_cast<void **>(cheri_getstack());

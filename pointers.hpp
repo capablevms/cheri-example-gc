@@ -46,14 +46,6 @@ template <typename ListStyle> struct PointersLinkedListIterator
   {
     index = 0;
     curr = reinterpret_cast<Pointers<0, ListStyle> *>(start);
-
-    /*
-    TRACE("Size: %u Depth: %u\n", curr->size, curr->depth);
-    for (uint32_t size = 0; size < curr->size; size++) {
-
-      TRACE("pointer[%d]: Value: %p\n", size, curr->values[size]);
-    }
-    */
   }
 
   PointersLinkedListIterator &operator++()

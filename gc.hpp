@@ -26,11 +26,17 @@ static thread_local GCObject *start = nullptr;
 static thread_local uint8_t timeWalked = 0;
 static inline void *bottom = 0;
 
+// A compile-time function used to determine the type of pointer used 
+// linked list using the Pointers struct as a node.
 template <typename ListStyle> struct PointerSelector
 {
   using ptr_type = const void *;
 };
 
+// The structure that holds the pointers and it is supposed 
+// to mirror the way VMs represent and use the stack.
+// It needs to receive a ListStyle which defines how the linked list
+// pointers are going the be represented and transformed.
 template <uint32_t count, typename ListStyle> struct Pointers
 {
   uint32_t size = count;
@@ -48,6 +54,9 @@ template <uint32_t count, typename ListStyle> struct Pointers
   }
 };
 
+
+// The function that goes through all the allocated
+// objects linked list and removes the unused ones.
 void sweep()
 {
   GCObject **current = &start;
@@ -72,6 +81,7 @@ void sweep()
   }
 }
 
+// Mark and object for the current iteration so it won't be freed.
 void mark(uint8_t d, GCObject *object)
 {
   if (object == nullptr)
@@ -94,6 +104,9 @@ void mark(uint8_t d, GCObject *object)
   }
 }
 
+// The function which walks the stack, it requires an Iterator which
+// is responsible for the strategy that will be used to walk the stack.
+// PSA: C++ iterators are not as flexible as I thought and caused more problems then it solved.
 template <typename PointerIterator> void walk(void *start)
 {
   timeWalked += 1;
@@ -109,7 +122,9 @@ template <typename PointerIterator> void walk(void *start)
   #include<cheri/cheric.h>
 #endif
 
-// gc allocate and put on the linked list
+// GC allocate and put on the linked list.
+// When CHERI is available it also flags the pointer it returns so it
+// will be easier to find.
 template <typename Obj = GCObject> Obj *get_gc(const uint64_t *_offset)
 {
   GCObject *result = reinterpret_cast<GCObject *>(malloc(sizeof(Obj)));
