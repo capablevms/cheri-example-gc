@@ -12,8 +12,8 @@
 
 
 using LS = CompressedListStyle;
-//using Iter = PointersLinkedListIterator<LS>;
-using Iter = CheriStackIterator;
+using Iter = PointersLinkedListIterator<LS>;
+//using Iter = CheriStackIterator;
 
 struct String
 {

@@ -4,16 +4,19 @@ CHERI_FLAGS=-march=rv64imafdcxcheri -mabi=l64pc128d --sysroot=$(HOME)/cheri/outp
 
 export 
 
-all: main
+all: mini bt ss
 
-main: main.cpp
+mini-opt: main.cpp
 	$(CXX) -ggdb --std=c++20 -O3 main.cpp -D NDEBUG -o main
 
-debug:
+mini:
 	$(CXX) -ggdb --std=c++20 -O0 main.cpp -o main
 
-cheri:
+mini-cheri:
 	$(CHERI_CXX) -ggdb $(CHERI_FLAGS) --std=c++20 -O0 main.cpp -o main
+
+mini-cheri-opt:
+	$(CHERI_CXX) -ggdb $(CHERI_FLAGS) --std=c++20 -O3 main.cpp -D NDEBUG -o main
 
 bt:
 	$(CXX) -ggdb --std=c++20 -O0 binary_trees.cpp -o binary_trees
@@ -31,7 +34,7 @@ ss-opt:
 	$(CXX) -ggdb --std=c++20 -O3 stack.cpp -D NDEBUG -o stack_scan
 
 ss-cheri-opt:
-	$(CHERI_CXX) -ggdb $(CHERI_FLAGS) --std=c++20 -O0 stack.cpp -D NDEBUG -o stack_scan
+	$(CHERI_CXX) -ggdb $(CHERI_FLAGS) --std=c++20 -O3 stack.cpp -D NDEBUG -o stack_scan
 
 ss-cheri:
 	$(CHERI_CXX) -ggdb $(CHERI_FLAGS) --std=c++20 -O0 stack.cpp -o stack_scan
