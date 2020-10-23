@@ -1,10 +1,12 @@
 #pragma once
 
 
+#include <machine/cherireg.h>
 #if __has_feature(capabilities)
 #include "gc.hpp"
 #include <cheri/cheric.h>
 
+#include "../examples/include/common.h"
 // On the stack inked list compression with cheri intrinsics.
 struct CheriCompressedListStyle
 {
@@ -12,7 +14,8 @@ struct CheriCompressedListStyle
 
   static const uint32_t transform(const void *ptr)
   {
-    return static_cast<uint32_t>(cheri_getoffset(ptr));
+    auto offset = cheri_getaddress(ptr) - cheri_getbase(cheri_getstack());
+    return static_cast<uint32_t>(offset);
   }
 
   static const void *get(uint32_t offset)
@@ -36,62 +39,66 @@ struct CheriStackIterator
 {
   void **location;
 
-  // Check if the pointer is pointing on the stack.
-  // Done by checking it aginst the bottom stack pointr's bounds.
-  bool is_stack(void *ptr)
-  {
-    return cheri_is_address_inbounds(bottom, cheri_getaddress(ptr));
-  }
-
   // Check if the pointer is executable. 
   // Done by using the permition bits.
   bool is_exec(void *ptr)
   {
-    return ((cheri_getperm(ptr) & 0b10) >> 1);
+    TRACE("%p %d\n", ptr, (cheri_getperm(ptr) != 0x6817d));
+    //inspect_pointer(*location);
+    return ((cheri_getperm(ptr) != 0x6817d) );
+
+  }
+  
+  // Skip all the things that arn't pointers.
+  // Also skip all the pointers we don't care about.  
+  void find_next() {
+    TRACE("%lu\n", cheri_getaddress(bottom) - cheri_getaddress(location));
+    while(!cheri_gettag(*location) or !cheri_getflags(*location) or is_exec(*location))  
+    {
+      if(location >= bottom) {
+        location = (void**)bottom;
+        return;
+      }
+      //TRACE("Looking for pointers: %p %p\n", location, *location);
+      location += 1;
+    }
+    TRACE("t: %d f: %d e: %d \n", cheri_gettag(*location), cheri_getflags(*location), !is_exec(*location));
+    TRACE("Found pointer: %p\n", *location);
   }
 
-  CheriStackIterator()
-  {
-    location = reinterpret_cast<void **>(bottom);
-  }
-
+  
   CheriStackIterator(void *start)
   {
-    location = reinterpret_cast<void **>(start);
+    location = reinterpret_cast<void **>(cheri_getstack());
   }
 
   CheriStackIterator &operator++()
   {
-    location -= 1;
-
-    // Skip all the things that arn't pointers.
-    // Also skip all the pointers we don't care about.
-    while (!cheri_gettag(*location) and (is_stack(*location) or is_exec(*location)))
-    {
-      location -= 1;
-      TRACE("Looking for pointers: %p\n", location);
-    }
-    TRACE("Found pointer: %p\n", location);
+    location += 1;
     return *this;
   }
 
-  bool operator!=(CheriStackIterator iter) const
+  bool operator!=(CheriStackIterator iter)
   {
-    return location != iter.location;
+    find_next();
+    TRACE("%lu %d\n", cheri_getaddress(bottom) - cheri_getaddress(location), (location != iter.location));
+    return location != bottom;
   }
+
   GCObject *operator*() const
   {
-    return reinterpret_cast<GCObject *>(*location);
+    auto result = cheri_setoffset(*location, 0);
+    return reinterpret_cast<GCObject *>(result);
   }
 
-  CheriStackIterator &begin()
+  CheriStackIterator& begin()
   {
     return *this;
   }
 
-  CheriStackIterator end()
+  CheriStackIterator& end()
   {
-    return std::move(CheriStackIterator());
+    return *this;
   }
 };
 #endif

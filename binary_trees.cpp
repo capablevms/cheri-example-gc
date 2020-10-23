@@ -3,6 +3,10 @@
 #include <iostream>
 #include <stdlib.h>
 
+#include "compressed.hpp"
+#include "cheri.h"
+#include "pointers.hpp"
+
 struct Node
 {
   GCObject gc;

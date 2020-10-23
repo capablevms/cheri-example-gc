@@ -6,8 +6,14 @@
 #include <vector>
 
 #include "gc.hpp"
+#include "compressed.hpp"
+#include "pointers.hpp"
+#include "cheri.hpp"
+
 
 using LS = CompressedListStyle;
+//using Iter = PointersLinkedListIterator<LS>;
+using Iter = CheriStackIterator;
 
 struct String
 {
@@ -68,14 +74,14 @@ void car_print(const void *prev, Car *self)
     printf(")\n");
   }
 
-  walk<PointersLinkedListIterator<LS>>(&ptrs);
+  walk<Iter>(&ptrs);
   sweep();
 }
 
 int main()
 {
   Pointers<2, LS> ptrs;
-  CompressedListStyle::bottom = __builtin_frame_address(0);
+  bottom = __builtin_frame_address(0);
 
   ptrs.values[0] = (GCObject *)car_new(120, 0);
   ptrs.values[1] = (GCObject *)car_new(80, 1);

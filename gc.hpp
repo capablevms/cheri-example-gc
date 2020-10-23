@@ -105,10 +105,20 @@ template <typename PointerIterator> void walk(void *start)
   };
 }
 
+#if __has_feature(capabilities)
+  #include<cheri/cheric.h>
+#endif
+
 // gc allocate and put on the linked list
-template <typename Obj> Obj *get_gc(const uint64_t *_offset)
+template <typename Obj = GCObject> Obj *get_gc(const uint64_t *_offset)
 {
   GCObject *result = reinterpret_cast<GCObject *>(malloc(sizeof(Obj)));
+  TRACE("allocated: %p\n", result);
+
+#if __has_feature(capabilities)
+  result = cheri_setflags(result, 1);
+#endif
+
   result->next = start;
   start = result;
   result->type = _offset;

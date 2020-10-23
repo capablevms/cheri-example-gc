@@ -23,3 +23,15 @@ bt-opt:
 
 bt-cheri-opt:
 	$(CHERI_CXX) -ggdb $(CHERI_FLAGS) --std=c++20 -O3 binary_trees.cpp -D NDEBUG -o binary_trees
+
+ss:
+	$(CXX) -ggdb --std=c++20 -O0 stack.cpp -o stack_scan
+
+ss-opt:
+	$(CXX) -ggdb --std=c++20 -O3 stack.cpp -D NDEBUG -o stack_scan
+
+ss-cheri-opt:
+	$(CHERI_CXX) -ggdb $(CHERI_FLAGS) --std=c++20 -O0 stack.cpp -D NDEBUG -o stack_scan
+
+ss-cheri:
+	$(CHERI_CXX) -ggdb $(CHERI_FLAGS) --std=c++20 -O0 stack.cpp -o stack_scan
