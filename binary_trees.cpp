@@ -3,8 +3,6 @@
 #include <iostream>
 #include <stdlib.h>
 
-#include "compressed.hpp"
-#include "cheri.h"
 #include "pointers.hpp"
 
 struct Node
@@ -42,9 +40,7 @@ Node *node_new(const int d)
   return result;
 }
 
-// using LS = PointerListStyle;
-// using LS = CompressedListStyle;
-using LS = CheriCompressedListStyle;
+using LS = PointerListStyle;
 using Iter = PointersLinkedListIterator<LS>;
 
 int main(int argc, char *argv[])
