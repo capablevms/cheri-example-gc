@@ -1,9 +1,9 @@
 #pragma once
 
 
-#include <machine/cherireg.h>
 #if __has_feature(capabilities)
 #include "gc.hpp"
+#include <machine/cherireg.h>
 #include <cheri/cheric.h>
 
 // On the stack inked list compression with CHERI intrinsics.
@@ -62,7 +62,9 @@ struct CheriStackIterator
         location = (void**)bottom;
         return;
       }
-      //TRACE("Looking for pointers: %p %p\n", location, *location);
+#ifdef VERBOSE
+      TRACE("Looking for pointers: %p %p\n", location, *location);
+#endif
       location += 1;
     }
     TRACE("t: %d f: %d e: %d \n", cheri_gettag(*location), cheri_getflags(*location), !is_exec(*location));
